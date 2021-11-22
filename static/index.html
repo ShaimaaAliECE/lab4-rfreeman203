@@ -52,9 +52,10 @@
 
             }
 
-            content += '</br><input type="submit" value="Submit">'
+            content += '</br><input type="submit" value="Submit" id="submit-btn">';
             content += '</form></br>';
 
+            content += '<div id=\'gradeDiv\'></div></br>';
 
             questionDiv.innerHTML = content;
         }
@@ -62,6 +63,9 @@
 
     function loadAnswers()
     {
+        let submitBtn = document.getElementById('submit-btn');
+        submitBtn.remove();
+
         let xReq = new XMLHttpRequest();
         xReq.onreadystatechange = displayAnswers;
         
@@ -74,14 +78,37 @@
         if(this.readyState == 4 && this.status == 200)
         {
             let questionList = JSON.parse(this.responseText);
+            let gradeDiv = document.getElementById('gradeDiv');
+            let correctAnswers = 0;
+            let totalQuestions = 0;
 
             for(q of questionList)
             {
                 let feedback = '';
                 let answerDiv = document.getElementById('answerDiv ' + q.stem);
-                feedback += q.answerIndex;
+
+                let radioButtons = document.getElementsByName("" + q.stem);
+
+                for(let i = 0; i < radioButtons.length; i++)
+                {
+                    if(radioButtons[i].checked == true)
+                    {
+                        if(i == q.answerIndex){
+                            feedback = "Correct!";
+                            correctAnswers++;
+                        }
+                        else
+                        {
+                            feedback = "Incorrect! ";
+                        }
+                    }
+                }
+                
                 answerDiv.innerHTML = feedback;
+                totalQuestions ++;
             }
+
+            gradeDiv.innerHTML = "Your grade is: " + correctAnswers / totalQuestions * 100 + "%!";
         }
     }
 
