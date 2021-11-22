@@ -10,8 +10,8 @@
     <h1>
         Welcome to the SE3316 Quiz!
     </h1>
-    </br>
     <button id='quiz-btn'>START</button>
+    <div id='questionDiv'></div>
 </body>
 <script>
     let quizBtn = document.getElementById('quiz-btn');
@@ -19,7 +19,43 @@
 
     function loadQuestions()
     {
-        alert("TEST");
+        quizBtn.remove();
+
+        let xReq = new XMLHttpRequest();
+        xReq.onreadystatechange = displayQuestions;
+        
+        xReq.open('GET', '/questionsInJson',true);
+        xReq.send();
+    }
+
+    function displayQuestions()
+    {
+        if(this.readyState == 4 && this.status == 200)
+        {
+            let questionDiv = document.getElementById('questionDiv');
+            let questionList = JSON.parse(this.responseText);
+            let content = "";
+
+            content += '<form>';
+
+            for(q of questionList)
+            {
+                content += '<p>' + q.stem + '</p>';
+                
+                for(n of q.options)
+                {
+                    content += '<input type="radio" id="answer ' + n + '" name="answerGroup">';
+                    content += '<label for="answer ' + n + '">' + n + '</label><br>';
+                }
+            }
+
+            content += '</br><input type="submit" value="Submit">'
+            content += '</form></br>';
+            content += '\n';
+
+
+            questionDiv.innerHTML = content;
+        }
     }
 
 </script>
