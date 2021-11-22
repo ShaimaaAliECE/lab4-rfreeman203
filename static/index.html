@@ -36,7 +36,7 @@
             let questionList = JSON.parse(this.responseText);
             let content = "";
 
-            content += '<form>';
+            content += '<form action=javascript:loadAnswers()>';
 
             for(q of questionList)
             {
@@ -44,9 +44,12 @@
                 
                 for(n of q.options)
                 {
-                    content += '<input type="radio" id="answer ' + n + '" name="answerGroup">';
-                    content += '<label for="answer ' + n + '">' + n + '</label><br>';
+                    content += '<input type="radio" id="answer ' + n + '" name="' + q.stem + '">';
+                    content += '<label for="answer ' + n + '">' + n + '</label></br>';
                 }
+
+                content += '</br><div id=\'answerDiv ' + q.stem + '\'></div>';
+
             }
 
             content += '</br><input type="submit" value="Submit">'
@@ -54,6 +57,31 @@
 
 
             questionDiv.innerHTML = content;
+        }
+    }
+
+    function loadAnswers()
+    {
+        let xReq = new XMLHttpRequest();
+        xReq.onreadystatechange = displayAnswers;
+        
+        xReq.open('GET', '/questionsInJson',true);
+        xReq.send();
+    }
+
+    function  displayAnswers()
+    {
+        if(this.readyState == 4 && this.status == 200)
+        {
+            let questionList = JSON.parse(this.responseText);
+
+            for(q of questionList)
+            {
+                let feedback = '';
+                let answerDiv = document.getElementById('answerDiv ' + q.stem);
+                feedback += q.answerIndex;
+                answerDiv.innerHTML = feedback;
+            }
         }
     }
 
