@@ -36,7 +36,7 @@
             let questionList = JSON.parse(this.responseText);
             let content = "";
 
-            content += '<form action=javascript:loadAnswers()>';
+            content += '<form action=javascript:loadGrade()>';
 
             for(q of questionList)
             {
@@ -44,7 +44,7 @@
                 
                 for(n of q.options)
                 {
-                    content += '<input type="radio" id="answer ' + n + '" name="' + q.stem + '">';
+                    content += '<input type="radio" id="answer ' + n + '" name="' + q.stem + '" onclick=loadAnswer()>';
                     content += '<label for="answer ' + n + '">' + n + '</label></br>';
                 }
 
@@ -61,19 +61,55 @@
         }
     }
 
-    function loadAnswers()
+    function loadAnswer()
     {
-        let submitBtn = document.getElementById('submit-btn');
-        submitBtn.remove();
-
         let xReq = new XMLHttpRequest();
-        xReq.onreadystatechange = displayAnswers;
+        xReq.onreadystatechange = displayAnswer;
         
         xReq.open('GET', '/questionsInJson',true);
         xReq.send();
     }
 
-    function  displayAnswers()
+    function displayAnswer()
+    {
+        if(this.readyState == 4 && this.status == 200)
+        {
+            let questionList = JSON.parse(this.responseText);
+
+            for(q of questionList)
+            {
+                let feedback = '';
+                let answerDiv = document.getElementById('answerDiv ' + q.stem);
+                let radioButtons = document.getElementsByName("" + q.stem);
+
+                for(let i = 0; i < radioButtons.length; i++)
+                {
+                    if(radioButtons[i].checked == true)
+                    {
+                        if(i == q.answerIndex)
+                            feedback = "Correct!";
+                        else
+                            feedback = "Incorrect!";
+                    }
+                }
+                answerDiv.innerHTML = feedback;
+            }
+        }
+    }
+
+    function loadGrade()
+    {
+        let submitBtn = document.getElementById('submit-btn');
+        submitBtn.remove();
+
+        let xReq = new XMLHttpRequest();
+        xReq.onreadystatechange = displayGrade;
+        
+        xReq.open('GET', '/questionsInJson',true);
+        xReq.send();
+    }
+
+    function  displayGrade()
     {
         if(this.readyState == 4 && this.status == 200)
         {
@@ -84,33 +120,22 @@
 
             for(q of questionList)
             {
-                let feedback = '';
-                let answerDiv = document.getElementById('answerDiv ' + q.stem);
-
                 let radioButtons = document.getElementsByName("" + q.stem);
 
                 for(let i = 0; i < radioButtons.length; i++)
                 {
                     if(radioButtons[i].checked == true)
                     {
-                        if(i == q.answerIndex){
-                            feedback = "Correct!";
+                        if(i == q.answerIndex)
                             correctAnswers++;
-                        }
-                        else
-                        {
-                            feedback = "Incorrect! ";
-                        }
                     }
                 }
-                
-                answerDiv.innerHTML = feedback;
                 totalQuestions ++;
             }
-
             gradeDiv.innerHTML = "Your grade is: " + correctAnswers / totalQuestions * 100 + "%!";
         }
     }
 
 </script>
 </html>
+
