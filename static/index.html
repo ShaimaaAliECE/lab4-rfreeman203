@@ -35,21 +35,25 @@
             let questionDiv = document.getElementById('questionDiv');
             let questionList = JSON.parse(this.responseText);
             let content = "";
+            let qIndex = 0;
 
             content += '<form action=javascript:loadGrade()>';
 
             for(q of questionList)
             {
                 content += '<p>' + q.stem + '</p>';
+
+                let aIndex = 0;
                 
                 for(n of q.options)
                 {
-                    content += '<input type="radio" id="answer ' + n + '" name="' + q.stem + '" onclick=loadAnswer()>';
+                    content += '<input type="radio" id="answer ' + n + '" name="' + q.stem + '" onclick=checkAnswer(' + qIndex + ',' + aIndex + ')>';
                     content += '<label for="answer ' + n + '">' + n + '</label></br>';
+                    aIndex++;
                 }
-
-                content += '</br><div id=\'answerDiv ' + q.stem + '\'></div>';
-
+                
+                content += '</br><div id=\'answerDiv' + qIndex + '\' name=answers></div>';
+                qIndex++;
             }
 
             content += '</br><input type="submit" value="Submit" id="submit-btn">';
@@ -61,12 +65,12 @@
         }
     }
 
-    function loadAnswer()
+    function checkAnswer(questionIndex,answerIndex)
     {
         let xReq = new XMLHttpRequest();
         xReq.onreadystatechange = displayAnswer;
         
-        xReq.open('GET', '/questionsInJson',true);
+        xReq.open('GET', `/answersInJson?q=${questionIndex}&a=${answerIndex}`,true);
         xReq.send();
     }
 
@@ -74,26 +78,10 @@
     {
         if(this.readyState == 4 && this.status == 200)
         {
-            let questionList = JSON.parse(this.responseText);
+            const myAnswer = this.responseText.split(" ")
 
-            for(q of questionList)
-            {
-                let feedback = '';
-                let answerDiv = document.getElementById('answerDiv ' + q.stem);
-                let radioButtons = document.getElementsByName("" + q.stem);
-
-                for(let i = 0; i < radioButtons.length; i++)
-                {
-                    if(radioButtons[i].checked == true)
-                    {
-                        if(i == q.answerIndex)
-                            feedback = "Correct!";
-                        else
-                            feedback = "Incorrect!";
-                    }
-                }
-                answerDiv.innerHTML = feedback;
-            }
+            let answerDiv = document.getElementById('answerDiv' + myAnswer[1]);
+            answerDiv.innerHTML = myAnswer[0];
         }
     }
 
@@ -104,8 +92,8 @@
 
         let xReq = new XMLHttpRequest();
         xReq.onreadystatechange = displayGrade;
-        
-        xReq.open('GET', '/questionsInJson',true);
+
+        xReq.open('GET', `/`, true);
         xReq.send();
     }
 
@@ -113,26 +101,18 @@
     {
         if(this.readyState == 4 && this.status == 200)
         {
-            let questionList = JSON.parse(this.responseText);
             let gradeDiv = document.getElementById('gradeDiv');
-            let correctAnswers = 0;
-            let totalQuestions = 0;
+            let correct = 0;
+            let total = 0;
 
-            for(q of questionList)
-            {
-                let radioButtons = document.getElementsByName("" + q.stem);
-
-                for(let i = 0; i < radioButtons.length; i++)
-                {
-                    if(radioButtons[i].checked == true)
-                    {
-                        if(i == q.answerIndex)
-                            correctAnswers++;
-                    }
-                }
-                totalQuestions ++;
+            let answerButtons = document.getElementsByName("answers");
+            for(let i = 0; i < answerButtons.length; i++){
+                if(answerButtons[i].innerHTML == "Correct!")
+                    correct++;
+                total++;
             }
-            gradeDiv.innerHTML = "Your grade is: " + correctAnswers / totalQuestions * 100 + "%!";
+
+            gradeDiv.innerHTML = "Your grade is: " + correct / total * 100 + "%!";
         }
     }
 
